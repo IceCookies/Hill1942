@@ -47,9 +47,27 @@ HWND Button::Create()
 		return NULL;
 	}
 
+	this->state = BUTTON_RELEASE;
 	this->OrginProc = (WNDPROC)SetWindowLong(hwnd, GWL_WNDPROC, (LONG)Proc);
+	self = hwnd;
 	return hwnd;
 
+}
+
+void Button::SetContent(WCHAR* content) 
+{
+	this->content = content;
+	InvalidateRect(this->self, NULL, TRUE);	
+}
+
+int Button::GetState() 
+{
+	return this->state;
+}
+
+void Button::SetState(int state) 
+{
+	this->state = state;
 }
 
 LRESULT CALLBACK Button::Proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -88,6 +106,7 @@ LRESULT CALLBACK Button::ButtonProc(HWND hwnd, UINT message, WPARAM wParam, LPAR
 	case WM_LBUTTONUP:
 		{
 			Handler();
+			//SendMessage(hwnd, WM_PAINT, wParam, lParam);
         }
 
 	default:

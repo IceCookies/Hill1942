@@ -1,5 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS
-
 #include <windows.h>
 #include <GdiPlus.h>
 #include <string.h>
@@ -7,8 +5,9 @@
 #include <opencv\highgui.h>
 #include <opencv\cv.h>
 #include <opencv\cvaux.h>
-#include "OpenFileDialog.h"
 
+#include "OpenFileDialog.h"
+#include "Utils.h"
 #include "Button.h"
 
 #pragma comment (lib, "Gdiplus.lib")
@@ -16,47 +15,130 @@
 using namespace Gdiplus;
 using namespace std;
 
+#define ID_TIMER    1  
+
 WNDPROC OrginProc;
 HINSTANCE hApp;
 HWND      hMainWindow;
 
+HWND hTestBtn;
+HWND hPauseBtn;
 
+Button* pauseBtn;
 
-
-
+CvCapture* pcapture = NULL;
+IplImage* pFrameImg = NULL;
+IplImage* frameImgBackup = NULL;
+IplImage* dst = NULL;
 char* szClassName = "MainWindow";
 int count_center_point;
 CvPoint cen_point[1000000];
 
+int paused = 0;
+CvPoint pt1 = cvPoint(0,0);    
+CvPoint pt2 = cvPoint(0,0);    
+bool is_selecting = false;  
+cv::Rect selection;
 
 LRESULT CALLBACK WinProc(HWND, UINT, WPARAM, LPARAM);
+VOID    CALLBACK TimerProc(HWND, UINT, UINT, DWORD);  
 
-char* GetNativeFile() 
+void cvMouseCallback(int mouseEvent,int x,int y,int flags,void* param)    
+{    
+	/*if (is_selecting) 
+	{
+		selection.x = MIN(x, pt1.x);
+        selection.y = MIN(y, pt1.y);
+        selection.width = std::abs(x - pt1.x);
+        selection.height = std::abs(y - pt1.y);
+        selection &= cv::Rect(0, 0, pFrameImg.cols, pFrameImg.rows);
+	}*/
+    switch(mouseEvent)    
+    {    
+    case CV_EVENT_LBUTTONDOWN:    
+        pt1 = cvPoint(x,y);    
+        pt2 = cvPoint(x,y);  
+		selection = cv::Rect(x ,y ,0, 0);
+        is_selecting = true;    
+        break;    
+    case CV_EVENT_MOUSEMOVE:   
+		if(is_selecting)  
+            pt2 = cvPoint(x,y);  
+		//cvRectangle(pFrameImg, pt1, pt2, CV_RGB(255, 0, 0));
+		//cvShowImage("video", pFrameImg);
+		//cvShowImage("video", frameImgBackup);
+        break;    
+    case CV_EVENT_LBUTTONUP:    
+        pt2 = cvPoint(x,y);    
+        is_selecting = false;   
+		//cvRectangle(pFrameImg, pt1, pt2, CV_RGB(255, 0, 0));
+		cvSetImageROI(pFrameImg, cvRect(pt1.x, pt1.y, std::abs(pt2.x - pt1.x), std::abs(pt2.y - pt1.y)));  
+		//cvNot(pFrameImg, pFrameImg);
+		//cvSetImageROI(pFrameImg, cvRect(0,0,0.5*pFrameImg->width,0.5*pFrameImg->height));  
+		dst = cvCreateImage(cvSize(std::abs(pt2.x-pt1.x), std::abs(pt2.y-pt1.y)),  
+            IPL_DEPTH_8U,  
+            pFrameImg->nChannels);  
+		cvCopy(pFrameImg, dst, 0);  
+		cvResetImageROI(pFrameImg);  
+		//cvCopy(pFrameImg, outImg);
+       // cvSaveImage(save_path, img);    
+       // cvResetImageROI(pFrameImg);  
+		
+		cvNamedWindow("newimg", 1);
+		cvMoveWindow("newimg", 0, 0);
+		Utils::SetWindow("newimg", hMainWindow, 400, 50);
+		cvShowImage("newimg", dst);
+        break;    
+    }    
+    return;    
+}  
+
+VOID CALLBACK TimerProc(HWND hwnd, UINT message, UINT iTimerID, DWORD dwTime)  
 {
-	char* fileName;
-	OpenFileDialog* openFileDialog = new OpenFileDialog();		
-	openFileDialog->FilterIndex = 1;
+	pFrameImg = cvQueryFrame(pcapture);
+	if (pFrameImg == NULL)
+		KillTimer(hMainWindow, ID_TIMER);
 
-	openFileDialog->Title = "Open Video File";
+	//frameImgBackup = cvCreateImage(cvSize(pFrameImg->width, pFrameImg->height), IPL_DEPTH_8U, pFrameImg->nChannels);
+	//cvCopy(pFrameImg, frameImgBackup, 0);
 
-	if (openFileDialog->ShowDialog())
+	
+	cvShowImage("video", pFrameImg);
+
+}  
+
+void testBtnHandler() 
+{
+	pcapture = cvCreateFileCapture(Utils::GetNativeFile());
+	
+	cvNamedWindow("video", 1);
+	cvMoveWindow("video", 0, 0);
+	Utils::SetWindow("video", hMainWindow, 5, 50);
+
+	SetTimer(hMainWindow, ID_TIMER, 30, TimerProc);  
+}
+
+void PauseBtnHandler()
+{
+	if (pauseBtn->GetState() == BUTTON_RELEASE) 
 	{
-		fileName = openFileDialog->FileName;
-		if (fileName == 0)
-		{
-			MessageBox(NULL, "Can not Open file", "Warning", MB_OK);
-			return 0;
-		}				
-		else 
-		{
-			return fileName;
-		}
+		paused = 1;
+		KillTimer(hMainWindow, ID_TIMER);
+		pauseBtn->SetContent(L"Resume");
+		pauseBtn->SetState(BUTTON_PRESSED);
+		cvSetMouseCallback("video", cvMouseCallback);
 	}
-	else
+	else 
 	{
-		MessageBox(NULL, "Can not Open file", "Error", MB_OK);
-		return 0;
+		paused = 0;
+		SetTimer(hMainWindow, ID_TIMER, 30, TimerProc);  
+		cvWaitKey(30);
+		pauseBtn->SetContent(L"Pause");
+		pauseBtn->SetState(BUTTON_RELEASE);
+		cvSetMouseCallback("video", NULL);
 	}
+	
+	
 }
 
 
@@ -134,7 +216,10 @@ LRESULT CALLBACK WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_CREATE:
 		{
-
+			
+			hTestBtn = (new Button(10, 10, 120, 30, L"Open", hWnd, NULL, testBtnHandler))->Create();
+			pauseBtn = new Button(150, 10, 120, 30, L"Pause",hWnd, NULL, PauseBtnHandler);
+			hPauseBtn = pauseBtn->Create();
 			return 0;
 		}
 
