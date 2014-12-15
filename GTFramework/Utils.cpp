@@ -25,8 +25,15 @@ void Utils::SetWindow(char* name, HWND hParent, int x, int y)
 	{
 		SetWindowLong(hVideoParent,GWL_STYLE,((GetWindowLong(hVideoParent,GWL_STYLE) & ~WS_POPUP) & ~WS_OVERLAPPEDWINDOW ) | WS_CHILD );
 		//SetWindowLong(hVideoParent,GWL_EXSTYLE,GetWindowLong(hVideoParent,GWL_EXSTYLE) & ~WS_EX_CLIENTEDGE  & ~WS_EX_WINDOWEDGE  );
-		SetWindowPos(hVideoParent, HWND_TOP, x - 93, y - 115, 0, 0, SWP_SHOWWINDOW );
+		POINT point;
+		point.x = x;
+		point.y = y;
+		bool result = ScreenToClient(hParent, &point);
+		if(result)
+		{
+			SetWindowPos(hVideoParent,HWND_TOP, point.x, point.y, 0, 0, SWP_SHOWWINDOW );
 
+		}
 		SetParent(hVideoParent, hParent);
 
 		//SetWindowPos(hVideoParent,HWND_TOP, 0, 0, 100, 100, SWP_SHOWWINDOW);

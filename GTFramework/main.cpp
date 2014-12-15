@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <GdiPlus.h>
 #include <string.h>
+#include <fstream>
 
 #include <opencv\highgui.h>
 #include <opencv\cv.h>
@@ -16,6 +17,7 @@ using namespace Gdiplus;
 using namespace std;
 
 #define ID_TIMER    1  
+#define TEMPLATE_INC 3
 
 WNDPROC OrginProc;
 HINSTANCE hApp;
@@ -23,16 +25,20 @@ HWND      hMainWindow;
 
 HWND hTestBtn;
 HWND hPauseBtn;
+HWND hShowBtn;
 
 Button* pauseBtn;
 
 CvCapture* pcapture = NULL;
 IplImage* pFrameImg = NULL;
 IplImage* frameImgBackup = NULL;
-IplImage* dst = NULL;
+ClipResult clipResult = {0, 0, 0, 0, NULL};
+LPClipResult pClipResult = NULL;
+//IplImage* dst = NULL;
 char* szClassName = "MainWindow";
-int count_center_point;
-CvPoint cen_point[1000000];
+int count_center_point = 0;
+MyPoint cen_point[1000000];
+
 
 int paused = 0;
 CvPoint pt1 = cvPoint(0,0);    
@@ -40,19 +46,18 @@ CvPoint pt2 = cvPoint(0,0);
 bool is_selecting = false;  
 cv::Rect selection;
 
+MyPoint carPostion = {-1, -1, 0};
+
+int test = 0;
+
+
+int numFrames = 0;
+
 LRESULT CALLBACK WinProc(HWND, UINT, WPARAM, LPARAM);
 VOID    CALLBACK TimerProc(HWND, UINT, UINT, DWORD);  
 
 void cvMouseCallback(int mouseEvent,int x,int y,int flags,void* param)    
 {    
-	/*if (is_selecting) 
-	{
-		selection.x = MIN(x, pt1.x);
-        selection.y = MIN(y, pt1.y);
-        selection.width = std::abs(x - pt1.x);
-        selection.height = std::abs(y - pt1.y);
-        selection &= cv::Rect(0, 0, pFrameImg.cols, pFrameImg.rows);
-	}*/
     switch(mouseEvent)    
     {    
     case CV_EVENT_LBUTTONDOWN:    
@@ -64,29 +69,28 @@ void cvMouseCallback(int mouseEvent,int x,int y,int flags,void* param)
     case CV_EVENT_MOUSEMOVE:   
 		if(is_selecting)  
             pt2 = cvPoint(x,y);  
-		//cvRectangle(pFrameImg, pt1, pt2, CV_RGB(255, 0, 0));
-		//cvShowImage("video", pFrameImg);
-		//cvShowImage("video", frameImgBackup);
         break;    
     case CV_EVENT_LBUTTONUP:    
         pt2 = cvPoint(x,y);    
         is_selecting = false;   
-		//cvRectangle(pFrameImg, pt1, pt2, CV_RGB(255, 0, 0));
 		cvSetImageROI(pFrameImg, cvRect(pt1.x, pt1.y, std::abs(pt2.x - pt1.x), std::abs(pt2.y - pt1.y)));  
-		//cvNot(pFrameImg, pFrameImg);
-		//cvSetImageROI(pFrameImg, cvRect(0,0,0.5*pFrameImg->width,0.5*pFrameImg->height));  
-		dst = cvCreateImage(cvSize(std::abs(pt2.x-pt1.x), std::abs(pt2.y-pt1.y)),  
-            IPL_DEPTH_8U,  
-            pFrameImg->nChannels);  
-		cvCopy(pFrameImg, dst, 0);  
+		IplImage* dst = cvCreateImage(cvSize(std::abs(pt2.x-pt1.x), std::abs(pt2.y-pt1.y)),  
+                            IPL_DEPTH_8U,  
+                            pFrameImg->nChannels);  
+		cvCopy(pFrameImg, dst, 0);
+		clipResult.x = (pt1.x + pt2.x) / 2;
+		clipResult.y = (pt1.y + pt2.y) / 2;
+		clipResult.width = std::abs(pt2.x - pt1.x);
+		clipResult.height = std::abs(pt2.y - pt1.y);
+		clipResult.img = dst;
+
+		pClipResult = &clipResult;
+
 		cvResetImageROI(pFrameImg);  
-		//cvCopy(pFrameImg, outImg);
-       // cvSaveImage(save_path, img);    
-       // cvResetImageROI(pFrameImg);  
 		
 		cvNamedWindow("newimg", 1);
 		cvMoveWindow("newimg", 0, 0);
-		Utils::SetWindow("newimg", hMainWindow, 400, 50);
+		Utils::SetWindow("newimg", hMainWindow, 800, 50);
 		cvShowImage("newimg", dst);
         break;    
     }    
@@ -95,16 +99,75 @@ void cvMouseCallback(int mouseEvent,int x,int y,int flags,void* param)
 
 VOID CALLBACK TimerProc(HWND hwnd, UINT message, UINT iTimerID, DWORD dwTime)  
 {
+	
 	pFrameImg = cvQueryFrame(pcapture);
-	if (pFrameImg == NULL)
+	numFrames++;
+	if (pFrameImg == NULL) 
+	{
 		KillTimer(hMainWindow, ID_TIMER);
+		return;
+	}
+	frameImgBackup = pFrameImg;
+	if (pClipResult != NULL) 
+	{
+
+		
+
+		int width = pClipResult->width;    //截图的大小
+		int height = pClipResult->height;
+		int x = pClipResult->x - width / 2;   //截图的左上角坐标
+		int y = pClipResult->y - height / 2;
+		IplImage* templateImg = pClipResult->img;  
+
+		int xTemplate;
+		int yTemplate;
+		if (carPostion.x != -1) 
+		{
+			xTemplate = carPostion.x - TEMPLATE_INC;
+			yTemplate = carPostion.y - TEMPLATE_INC;
+		}
+		else 
+		{
+			xTemplate = x - TEMPLATE_INC;
+			yTemplate = y - TEMPLATE_INC;	
+		}
+		cvSetImageROI(pFrameImg, cvRect(xTemplate, yTemplate, width + 2 * TEMPLATE_INC, height + 2 * TEMPLATE_INC));  
+		IplImage* target = cvCreateImage(cvSize(width + 2 * TEMPLATE_INC, height + 2 * TEMPLATE_INC),  
+                                         IPL_DEPTH_8U,  
+                                         pFrameImg->nChannels);  
+
+		
+		cvCopy(pFrameImg, target, 0);
+		cvResetImageROI(pFrameImg);  
+		int resultWidth = target->width - templateImg->width + 1;
+		int resultHeight = target->height - templateImg->height + 1;
+		IplImage* resultImg = cvCreateImage(cvSize(resultWidth, resultHeight), 32, 1);
+		cvMatchTemplate(target, templateImg, resultImg, CV_TM_CCOEFF);
+		double minValue, maxValue;
+		CvPoint minPoint;
+		CvPoint maxPoint;
+
+		cvMinMaxLoc(resultImg, &minValue, &maxValue, &minPoint, &maxPoint);
+
+		carPostion.x = xTemplate + maxPoint.x;
+		carPostion.y = yTemplate + maxPoint.y;
+		
+		cen_point[count_center_point].x = carPostion.x + width / 2;
+		cen_point[count_center_point].y = carPostion.y + height / 2;
+			//cen_point[count_center_point].value = maxValue;
+		count_center_point++;
+		
+			
+
+			//cvShowImage("target", target);
+			//cvShowImage("result", resultImg);
+
+			//KillTimer(hMainWindow, ID_TIMER);
+	}
 
 	//frameImgBackup = cvCreateImage(cvSize(pFrameImg->width, pFrameImg->height), IPL_DEPTH_8U, pFrameImg->nChannels);
 	//cvCopy(pFrameImg, frameImgBackup, 0);
-
-	
 	cvShowImage("video", pFrameImg);
-
 }  
 
 void testBtnHandler() 
@@ -113,7 +176,7 @@ void testBtnHandler()
 	
 	cvNamedWindow("video", 1);
 	cvMoveWindow("video", 0, 0);
-	Utils::SetWindow("video", hMainWindow, 5, 50);
+	Utils::SetWindow("video", hMainWindow, 0, 50);
 
 	SetTimer(hMainWindow, ID_TIMER, 30, TimerProc);  
 }
@@ -132,11 +195,39 @@ void PauseBtnHandler()
 	{
 		paused = 0;
 		SetTimer(hMainWindow, ID_TIMER, 30, TimerProc);  
-		cvWaitKey(30);
+		test = 1;
 		pauseBtn->SetContent(L"Pause");
 		pauseBtn->SetState(BUTTON_RELEASE);
 		cvSetMouseCallback("video", NULL);
 	}
+	
+	
+}
+
+void showBtnHandler() 
+{
+	IplImage* pTrackImg = cvCreateImage(cvGetSize(frameImgBackup), 8, 3);
+	cvZero(pTrackImg);
+	CvScalar color = {0, 255, 0};
+	cvNamedWindow("Track", 1);
+	for (int i = 0; i < count_center_point - 1; i++) 
+	{
+		cvLine(pTrackImg, cen_point[i].point, cen_point[i + 1].point, color);
+		//cvWaitKey(100);
+		cvShowImage("Track", pTrackImg);
+	}
+
+	std::fstream fs;
+	fs.open("out.txt", std::fstream::in | std::fstream::out | std::fstream::app);
+	while (count_center_point > 0) 
+	{
+		int x = cen_point[count_center_point - 1].x;
+		int y = cen_point[count_center_point - 1].y;
+		fs << "(" << x << ", " <<  y << ")" << std::endl;
+		count_center_point--;
+		
+	}
+	fs.close();
 	
 	
 }
@@ -220,6 +311,7 @@ LRESULT CALLBACK WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			hTestBtn = (new Button(10, 10, 120, 30, L"Open", hWnd, NULL, testBtnHandler))->Create();
 			pauseBtn = new Button(150, 10, 120, 30, L"Pause",hWnd, NULL, PauseBtnHandler);
 			hPauseBtn = pauseBtn->Create();
+			hShowBtn = (new Button(290, 10, 120, 30, L"Show", hWnd, NULL, showBtnHandler))->Create();
 			return 0;
 		}
 
