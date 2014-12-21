@@ -7,6 +7,7 @@ typedef struct ClipResult_PTR
 	int width;
 	int height;
 	IplImage* img;
+
 }ClipResult, *LPClipResult;
 
 typedef struct MyPoint_PTR
@@ -31,5 +32,6 @@ public:
 public:
 	static void SetWindow(char* name, HWND hParent, int x, int y);
 	static char* GetNativeFile();
+	static BOOL SaveBitmapToFile(LPCTSTR lpszFilePath, HBITMAP hBm);
 };
 
