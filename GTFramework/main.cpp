@@ -35,6 +35,7 @@ HWND hExceptionButton;
 HWND hOpenVideoButton;
 HWND hPauseButton;
 HWND hShowButton;
+HWND hBehavGetButton;
 HWND hBehavDectButton;
 HWND hBehavClsButton;
 HWND hTrainButton;
@@ -154,9 +155,10 @@ LRESULT CALLBACK WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			SetWindowPos(hOpenVideoButton,  NULL, 35,  70, 0, 0, SWP_NOSIZE);
 			SetWindowPos(hPauseButton,      NULL, 75,  70, 0, 0, SWP_NOSIZE);
 			SetWindowPos(hShowButton,       NULL, 115, 70, 0, 0, SWP_NOSIZE);
-										    		   
-			SetWindowPos(hBehavDectButton,  NULL, 35,  70, 0, 0, SWP_NOSIZE);
-			SetWindowPos(hBehavClsButton,   NULL, 75,  70, 0, 0, SWP_NOSIZE);
+
+			SetWindowPos(hBehavGetButton,   NULL, 35,  70, 0, 0, SWP_NOSIZE);							    		   
+			SetWindowPos(hBehavDectButton,  NULL, 75,  70, 0, 0, SWP_NOSIZE);
+			SetWindowPos(hBehavClsButton,   NULL, 115, 70, 0, 0, SWP_NOSIZE);
 										    		   
 			SetWindowPos(hTrainButton,      NULL, 35,  70, 0, 0, SWP_NOSIZE);
 			SetWindowPos(hExcepDectButton,  NULL, 75,  70, 0, 0, SWP_NOSIZE);

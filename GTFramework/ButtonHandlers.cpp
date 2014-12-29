@@ -20,6 +20,7 @@ extern HWND hExceptionButton;
 extern HWND hOpenVideoButton;
 extern HWND hPauseButton;
 extern HWND hShowButton;
+extern HWND hBehavGetButton;
 extern HWND hBehavDectButton;
 extern HWND hBehavClsButton;
 extern HWND hTrainButton;
@@ -121,6 +122,7 @@ void TrackingButtonLButtonHandler()
 	ShowWindow(hOpenVideoButton, TRUE);
 	ShowWindow(hPauseButton,     TRUE);
 	ShowWindow(hShowButton,      TRUE);
+	ShowWindow(hBehavGetButton,  FALSE);
 	ShowWindow(hBehavDectButton, FALSE);
 	ShowWindow(hBehavClsButton,  FALSE);
 	ShowWindow(hTrainButton,     FALSE);
@@ -132,6 +134,7 @@ void TrackingButtonLButtonHandler()
 	EnableWindow(hOpenVideoButton, TRUE);
 	EnableWindow(hPauseButton,     TRUE);
 	EnableWindow(hShowButton,      TRUE);
+	EnableWindow(hBehavGetButton,  FALSE);
 	EnableWindow(hBehavDectButton, FALSE);
 	EnableWindow(hBehavClsButton,  FALSE);
 	EnableWindow(hTrainButton,     FALSE);
@@ -180,6 +183,7 @@ void BehaviorButtonLButtonHandler()
 	ShowWindow(hOpenVideoButton, FALSE);
 	ShowWindow(hPauseButton,     FALSE);
 	ShowWindow(hShowButton,      FALSE);
+	ShowWindow(hBehavGetButton,  TRUE);
 	ShowWindow(hBehavDectButton, TRUE);
 	ShowWindow(hBehavClsButton,  TRUE);
 	ShowWindow(hTrainButton,     FALSE);
@@ -191,6 +195,7 @@ void BehaviorButtonLButtonHandler()
 	EnableWindow(hOpenVideoButton, FALSE);
 	EnableWindow(hPauseButton,     FALSE);
 	EnableWindow(hShowButton,      FALSE);
+	EnableWindow(hBehavGetButton,  TRUE);
 	EnableWindow(hBehavDectButton, TRUE);
 	EnableWindow(hBehavClsButton,  TRUE);
 	EnableWindow(hTrainButton,     FALSE);
@@ -240,6 +245,7 @@ void ExceptionButtonLButtonHandler()
 	ShowWindow(hOpenVideoButton, FALSE);
 	ShowWindow(hPauseButton,     FALSE);
 	ShowWindow(hShowButton,      FALSE);
+	ShowWindow(hBehavGetButton,  FALSE);
 	ShowWindow(hBehavDectButton, FALSE);
 	ShowWindow(hBehavClsButton,  FALSE);
 	ShowWindow(hTrainButton,     TRUE);
@@ -251,6 +257,7 @@ void ExceptionButtonLButtonHandler()
 	EnableWindow(hOpenVideoButton, FALSE);
 	EnableWindow(hPauseButton,     FALSE);
 	EnableWindow(hShowButton,      FALSE);
+	EnableWindow(hBehavGetButton,  FALSE);
 	EnableWindow(hBehavDectButton, FALSE);
 	EnableWindow(hBehavClsButton,  FALSE);
 	EnableWindow(hTrainButton,     TRUE);
@@ -360,6 +367,35 @@ void ShowButtonLButtonHandler()
 //////////////////////////
 ///  Handlers For Buttons In Behavior Page
 /////////////////////////////////
+void BehavGetButtonPaintHandler()
+{
+	HDC hdc;
+	PAINTSTRUCT ps;
+	hdc = BeginPaint(hBehavGetButton, &ps);
+
+	Gdiplus::Graphics graphics(hdc);
+	Gdiplus::SolidBrush solidBrush1(Gdiplus::Color(255, 0, 0, 0));
+	graphics.FillRectangle(&solidBrush1, 0, 0, 35, 20);
+
+
+	Gdiplus::FontFamily  fontFamily(L"Microsoft YaHei");
+	Gdiplus::Font        font(&fontFamily, 12, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
+	Gdiplus::PointF      pointF(0.0f, 2.0f);
+	Gdiplus::SolidBrush  solidBrush2(Gdiplus::Color(255, 255, 255, 255));
+	if (TabState == 1) 
+	{
+		graphics.DrawString(L"Ã·»°", -1, &font, pointF, &solidBrush2);
+	}
+	graphics.ReleaseHDC(hdc);
+
+	EndPaint(hBehavGetButton, &ps);
+}
+void BehavGetButtonLButtonHandler()
+{
+	BehavGetHandler();
+	//MessageBox(NULL, "behde", "dd", MB_OK);
+}
+
 void BehavDectButtonPaintHandler()
 {
 	HDC hdc;
@@ -649,6 +685,26 @@ LRESULT CALLBACK ShowButtonProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
 	case WM_LBUTTONUP:
 		{
 			ShowButtonLButtonHandler();
+		}
+
+	default:
+		return CallWindowProc(OriginProc, hwnd, message, wParam, lParam);
+	}
+}
+LRESULT CALLBACK BehavGetButtonProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch (message)
+	{	
+	case WM_PAINT:
+		{
+			
+			BehavGetButtonPaintHandler();
+			return 0;
+		}	
+
+	case WM_LBUTTONUP:
+		{
+			BehavGetButtonLButtonHandler();
 		}
 
 	default:

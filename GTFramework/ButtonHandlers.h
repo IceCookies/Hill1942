@@ -33,6 +33,9 @@ void PauseButtonLButtonHandler();
 void ShowButtonPaintHandler();
 void ShowButtonLButtonHandler();
 
+void BehavGetButtonPaintHandler();
+void BehavGetButtonLButtonHandler();
+
 void BehavDectButtonPaintHandler();
 void BehavDectButtonLButtonHandler();
 
@@ -55,6 +58,7 @@ LRESULT CALLBACK ExceptionButtonProc(HWND hwnd, UINT message, WPARAM wParam, LPA
 LRESULT CALLBACK OpenVidoeButtonProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK PauseButtonProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK ShowButtonProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK BehavGetButtonProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK BehavDectButtonProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK BehavClsButtonProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK TrainButtonProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);

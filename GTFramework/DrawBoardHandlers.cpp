@@ -19,6 +19,9 @@ int isExceptionDraw = 0;
 int isStartRecognize = 0;
 POINT ptOne, ptTwo;
 
+POINT startBehaviorPoint;
+POINT endBehaviorPoint;
+
 void BehavBoardPaintHandler()
 {
 	HDC hdc;
@@ -64,6 +67,9 @@ LRESULT CALLBACK BehabiorBoardProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 			ptOne.x = (int)(short)LOWORD(lParam);
 			ptOne.y = (int)(short)HIWORD(lParam);
 
+			startBehaviorPoint.x = ptOne.x;
+			startBehaviorPoint.y = ptOne.y;
+
 		    return 0;
 		}
 	case WM_MOUSEMOVE:
@@ -89,6 +95,9 @@ LRESULT CALLBACK BehabiorBoardProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 	case WM_LBUTTONUP:
 		{
 			isBehaviorDraw  = 0;
+
+			endBehaviorPoint.x = ptTwo.x;
+			endBehaviorPoint.y = ptTwo.y;
 			
 			HDC     hdc     = GetDC(hBehaviorBoard);
             HBITMAP hBitmap = CreateCompatibleBitmap(hdc, 600, 360);
@@ -96,7 +105,7 @@ LRESULT CALLBACK BehabiorBoardProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             
             SelectObject(hdcMem, hBitmap);
             BitBlt(hdcMem, 0, 0, 600, 360, hdc, 0, 0, SRCCOPY);
-            Utils::SaveBitmapToFile("E:\\aaa.bmp", hBitmap);
+            Utils::SaveBitmapToFile("target.bmp", hBitmap);
 			
 		    return 0;
 		}

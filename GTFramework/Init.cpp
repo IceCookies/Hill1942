@@ -22,6 +22,7 @@ extern HWND hExceptionButton;
 extern HWND hOpenVideoButton;
 extern HWND hPauseButton;
 extern HWND hShowButton;
+extern HWND hBehavGetButton;
 extern HWND hBehavDectButton;
 extern HWND hBehavClsButton;
 extern HWND hTrainButton;
@@ -42,6 +43,7 @@ void InitButtons(HWND hWnd)
 	hPauseButton     = CreateButton(30,  20, hWnd, NULL, PauseButtonProc);
 	hShowButton      = CreateButton(30,  20, hWnd, NULL, ShowButtonProc);
 
+	hBehavGetButton  = CreateButton(30,  20, hWnd, NULL, BehavGetButtonProc);
 	hBehavDectButton = CreateButton(30,  20, hWnd, NULL, BehavDectButtonProc);
 	hBehavClsButton  = CreateButton(30,  20, hWnd, NULL, BehavClsButtonProc);
 
@@ -59,6 +61,7 @@ void InitDrawBoards(HWND hWnd)
 
 void InitState()
 {
+	ShowWindow(hBehavGetButton,    FALSE);
 	ShowWindow(hBehavDectButton,   FALSE);
 	ShowWindow(hBehavClsButton,    FALSE);
 	ShowWindow(hTrainButton,       FALSE);
@@ -67,6 +70,7 @@ void InitState()
 	ShowWindow(hBehaviorBoard,     FALSE);
 	ShowWindow(hExceptionBoard,    FALSE);
 
+	EnableWindow(hBehavGetButton,  FALSE);
 	EnableWindow(hBehavDectButton, FALSE);
 	EnableWindow(hBehavClsButton,  FALSE);
 	EnableWindow(hTrainButton,     FALSE);

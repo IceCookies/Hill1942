@@ -2,6 +2,6 @@
 
 void CreateBoard();
 
-
+void BehavGetHandler();
 void BehavDectHandler();
 void BehavClsHandler();
