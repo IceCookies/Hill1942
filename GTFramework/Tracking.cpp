@@ -19,7 +19,7 @@ extern HWND hPauseButton;
 
 CvCapture*   pcapture       = NULL;
 IplImage*    pFrameImg      = NULL;
-IplImage*    oldImage       = NULL;
+IplImage*    pOldImage      = NULL;
 ClipResult   clipResult     = {0, 0, 0, 0, NULL};
 LPClipResult pClipResult    = NULL;
 
@@ -217,15 +217,14 @@ VOID CALLBACK TimerProc(HWND, UINT, UINT, DWORD)
 	cvShowImage("video", pFrameImg);
 	if (!is_firstFram) 
 	{
-		cvReleaseImage(&oldImage);
-		oldImage = pFrameImg;
+		cvReleaseImage(&pOldImage);
+		pOldImage = pFrameImg;
 	}
 	if (is_firstFram) 
 	{
-		oldImage     = pFrameImg;
+		pOldImage    = pFrameImg;
 		is_firstFram = false;
 	}
-	//
 	//pFrameImg = NULL;
 }
 
@@ -300,10 +299,15 @@ void DestroyTracking()
 {
 	KillTimer(hMainWindow, ID_TIMER);
 	memset(cen_point, 0, sizeof(cen_point));
-	//cvDestroyWindow("video");
 	cvDestroyAllWindows();
+	if (pFrameImg) 
+		cvReleaseImage(&pFrameImg);
+	/*if (pOldImage) 
+		cvReleaseImage(&pOldImage);*/
+	cvReleaseCapture(&pcapture);
 	pcapture           = NULL;
 	pFrameImg          = NULL;
+	pOldImage          = NULL;
 	pClipResult        = NULL;
 
 	count_center_point = 0;
