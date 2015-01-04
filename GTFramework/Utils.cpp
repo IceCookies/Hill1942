@@ -55,7 +55,7 @@ char* Utils::GetNativeFile()
 		fileName = openFileDialog->FileName;
 		if (fileName == 0)
 		{
-			MessageBox(NULL, "Can not Open file", "Warning", MB_OK);
+			MessageBox(NULL, "Not Open file", "Warning", MB_OK);
 			SetCurrentDirectory(currentDir);
 			return 0;
 		}				
@@ -67,7 +67,7 @@ char* Utils::GetNativeFile()
 	}
 	else
 	{
-		MessageBox(NULL, "Can not Open file", "Error", MB_OK);
+		MessageBox(NULL, "Not Open file", "Error", MB_OK);
 		SetCurrentDirectory(currentDir);
 		return 0;
 	}

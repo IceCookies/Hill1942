@@ -31,6 +31,10 @@ extern HWND hRedoButton;
 extern HWND hBehaviorBoard;
 extern HWND hExceptionBoard;
 
+extern HWND hTrackGetButton;
+extern HWND hTrackDectButton;
+extern HWND hTrackRedoButton;
+
 extern MyPoint cen_point[1000000];
 
 void InitButtons(HWND hWnd)
@@ -50,6 +54,10 @@ void InitButtons(HWND hWnd)
 	hTrainButton     = CreateButton(30,  20, hWnd, NULL, TrainButtonProc);
 	hExcepDectButton = CreateButton(30,  20, hWnd, NULL, ExcepDectButtonProc);
 	hRedoButton      = CreateButton(30,  20, hWnd, NULL, RedoButtonProc);
+
+	//hTrackGetButton  = CreateButton(30,  20, hWnd, NULL, TrainButtonProc);
+	//hTrackDectButton = CreateButton(30,  20, hWnd, NULL, TrainButtonProc);
+	//hTrackRedoButton = CreateButton(30,  20, hWnd, NULL, TrainButtonProc);
 }
 
 void InitDrawBoards(HWND hWnd)

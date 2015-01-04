@@ -47,15 +47,23 @@ void reverseImgColor(IplImage* item)
 }
 
 /*提取特征*/
-int training(const char* bgName, const char* targetName)
+int training(const char* bgName, const char* targetName, IplImage* targetImage)
 {
 	int    flag;
 	int    sample[10][10];
 
 	int bottom, top, left, right;
 
-	IplImage *bg    = cvLoadImage(bgName);
-	IplImage *model = cvLoadImage(targetName);
+	IplImage *bg    = cvLoadImage(bgName);\
+	IplImage* model = 0;
+	if (targetImage == 0) 
+	{
+		model = cvLoadImage(targetName);
+	}
+	else
+	{
+		model = targetImage;
+	}
 
 	IplImage *src = cvCreateImage(cvSize(bg->width, bg->height), IPL_DEPTH_8U, bg->nChannels);
 	cvAbsDiff(model, bg, src);  //获取轨迹
@@ -143,7 +151,7 @@ int training(const char* bgName, const char* targetName)
 		}
 	}
 
-	int w = (right  - left) / 10;
+	/*int w = (right  - left) / 10;
 	int h = (bottom - top)  / 10;
 
 	for(int p = 0; p < 10; p++)
@@ -170,7 +178,36 @@ int training(const char* bgName, const char* targetName)
 				sample[p][k] = 0;
 			}
 		}
-	}
+	}*/
+
+	int w = img_binary->width / 10;
+	int h = img_binary->height  / 10;
+
+    for(int p = 0; p < 10; p++)
+    {
+        for(int k = 0; k < 10; k++)
+        {
+            int count = 0;
+			for(int t = 0 + k * h; t < 0 + (k + 1) * h; t++)
+            {
+                for(int r = 0 + p * w; r < 0 + (p + 1) * w; r++)
+                {
+                    if(ptr[t * img_binary->widthStep + r] == 0)
+                    {
+                        count++;
+                    }
+                }
+            }
+            if(count > 0)
+            {
+                sample[p][k] = 1;
+            }
+			else
+			{
+                sample[p][k] = 0;
+			}
+        }
+    }
 
 	//提取特征向量
 	std::ofstream outFile("charactor.txt", std::ios::out);
@@ -187,19 +224,40 @@ int training(const char* bgName, const char* targetName)
 	return 1;
 }
 
-void recognize()
+
+void recognize(const char* trainDataName)
 {
-	float labels[30] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0,
-		                1.0, 2.0, 3.0, 4.0, 5.0, 6.0,
-		                1.0, 2.0, 3.0, 4.0, 5.0, 6.0,
-		                1.0, 2.0, 3.0, 4.0, 5.0, 6.0,
-		                1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
-	cv::Mat labelsMat(30, 1, CV_32FC1, labels);     //1_6
+	float labels[150] = {1.0, 2.0, 3.0, 4, 5, 6,
+		                 1.0, 2.0, 3.0, 4, 5, 6,
+		                 1.0, 2.0, 3.0, 4, 5, 6,
+		                 1.0, 2.0, 3.0, 4, 5, 6,
+		                 1.0, 2.0, 3.0, 4, 5, 6,
+	                     1.0, 2.0, 3.0, 4, 5, 6,
+	                     1.0, 2.0, 3.0, 4, 5, 6,
+	                     1.0, 2.0, 3.0, 4, 5, 6,
+	                     1.0, 2.0, 3.0, 4, 5, 6,
+	                     1.0, 2.0, 3.0, 4, 5, 6,
+	                     1.0, 2.0, 3.0, 4, 5, 6,
+	                     1.0, 2.0, 3.0, 4, 5, 6,
+	                     1.0, 2.0, 3.0, 4, 5, 6,
+	                     1.0, 2.0, 3.0, 4, 5, 6,
+	                     1.0, 2.0, 3.0, 4, 5, 6,
+	                     1.0, 2.0, 3.0, 4, 5, 6,
+	                     1.0, 2.0, 3.0, 4, 5, 6,
+	                     1.0, 2.0, 3.0, 4, 5, 6,
+	                     1.0, 2.0, 3.0, 4, 5, 6,
+	                     1.0, 2.0, 3.0, 4, 5, 6,
+	                     1.0, 2.0, 3.0, 4, 5, 6,
+	                     1.0, 2.0, 3.0, 4, 5, 6,
+	                     1.0, 2.0, 3.0, 4, 5, 6,
+	                     1.0, 2.0, 3.0, 4, 5, 6,
+	                     1.0, 2.0, 3.0, 4, 5, 6};
+	cv::Mat labelsMat(150, 1, CV_32FC1, labels);     //1_6
 
-	float trainingData[30][100];  
+	float trainingData[150][100];  
 
-	std::ifstream trainData("train.txt", std::ios::in);
-	for(int i = 0; i < 30; i++)
+	std::ifstream trainData(trainDataName, std::ios::in);
+	for(int i = 0; i < 150; i++)
 	{
 		std::string str;
 		std::getline(trainData, str);
@@ -212,7 +270,7 @@ void recognize()
 		}	
 	}
 	trainData.close();
-	cv::Mat trainingDataMat(30, 100, CV_32FC1, trainingData);
+	cv::Mat trainingDataMat(150, 100, CV_32FC1, trainingData);
 
 	// step 2: 设置SVM参数
 	CvSVMParams params;
@@ -272,6 +330,7 @@ void recognize()
 			MessageBox(NULL, "自东向北转", "轨迹识别", MB_OK); 
 		}
 		break;
+		
 	case 4:
 		if (startBehaviorPoint.y > endBehaviorPoint.y) 
 		{
@@ -309,7 +368,7 @@ void recognize()
 //提取按钮
 void BehavGetHandler()
 {
-	if (training("Assets\\CrossRoad.png", "target.bmp")) 
+	if (training("Assets\\CrossRoad.png", "target.bmp", 0)) 
 	{
 		MessageBox(NULL, "提取成功", "结果", MB_OK);
 	}
@@ -319,7 +378,7 @@ void BehavGetHandler()
 //检测按钮
 void BehavDectHandler()
 {
-	recognize();
+	recognize("train.txt");
 }
 
 //清除按钮

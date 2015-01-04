@@ -3,6 +3,10 @@
 #include <GdiPlus.h>
 #include <string>
 
+#include <opencv\highgui.h>
+#include <opencv\cv.h>
+#include <opencv\cvaux.h>
+
 #include "Button.h"
 #include "ButtonHandlers.h"
 #include "Tracking.h"
